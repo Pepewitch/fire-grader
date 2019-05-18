@@ -43,6 +43,7 @@ const gradeTestCase = (filepath: string, test: TestCase) => {
       data += e.toString();
     });
     child.stderr.on("data", e => {
+      finish = true;
       res({
         status: "x",
         message: e.toString(),
@@ -52,7 +53,7 @@ const gradeTestCase = (filepath: string, test: TestCase) => {
     child.stdout.on("close", () => {
       finish = true;
       res({
-        status: data === test.expected ? "P" : "-",
+        status: data.trim() === test.expected.trim() ? "P" : "-",
         message: "",
         time: new Date().getTime() - startTime.getTime()
       });
@@ -68,14 +69,14 @@ export const gradeFile = async (filepath: string, tests: Array<TestCase>) => {
   return output;
 };
 
-export const getFile = (objPath: string) => {
+export const getFile = (objPath: string, filepath: string) => {
   return new Promise((res, rej) => {
-    const splittedPath = objPath.split("/");
+    const splittedPath = filepath.split("/");
     if (splittedPath.length > 1) {
       mkdirp(
         splittedPath.slice(0, splittedPath.length - 1).join("/"),
         async (err, made) => {
-          await bucket.file(objPath).download({ destination: objPath });
+          await bucket.file(objPath).download({ destination: filepath });
           res();
         }
       );
@@ -119,6 +120,6 @@ export const storeGrade = async (objPath: string, gradeList: Grade[]) => {
   });
 };
 
-export const removeFile = async (objPath: string) => {
-  unlinkSync(objPath);
+export const removeFile = async (filepath: string) => {
+  unlinkSync(filepath);
 };
